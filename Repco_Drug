@@ -1,0 +1,432 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": []
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "NmCaJR-hBk-R"
+      },
+      "source": [
+        "# Repco Dug Production"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "MnS6LBQMB1T1"
+      },
+      "source": [
+        "**Objective and Prerequisites**\n",
+        "\n",
+        "Repco wants to use LP to maximize its sales revenue from selling three different drugs. Some prerequisites are:\n",
+        "\n",
+        "\n",
+        "*   Drug used to produce other drugs cannot be sold separately.\n",
+        "*   Total work hours cannot be overtime.\n",
+        "*   Ensure that drug used to produce other drugs is within availability.\n",
+        "\n"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "Zd6HRlaJDZTt"
+      },
+      "source": [
+        "---\n",
+        "## **Problem Description**\n",
+        "\n",
+        "![picture](https://i.guim.co.uk/img/media/20491572b80293361199ca2fc95e49dfd85e1f42/0_240_5157_3094/master/5157.jpg?width=620&quality=45&dpr=2&s=none)\n",
+        "\n",
+        "Repco produces three drugs, A, B, and C, and can sell \n",
+        "these drugs in unlimited quantities at unit prices $8, $70, \n",
+        "and $100, respectively. Producing a unit of drug A \n",
+        "requires one hour of labor. Producing a unit of drug B \n",
+        "requires two hours of labor and two units of drug A. \n",
+        "Producing one unit of drug C requires three hours of \n",
+        "labor and one unit of drug B. Any drug A that is used to \n",
+        "produce drug B cannot be sold separately, and any drug \n",
+        "B that is used to produce drug C cannot be sold \n",
+        "separately. A total of 4000 hours of labor are available. "
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "pNdKWmjri7bl"
+      },
+      "source": [
+        "---\n",
+        "\n",
+        "## Model Formulation"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "n8S_FpipceEq"
+      },
+      "source": [
+        "### Indices:\n",
+        "\n",
+        "$𝑖,j \\in \\{A,B,C\\}$ : Index to represent three different types of drugs.\n",
+        "\n",
+        "### Parameters: \n",
+        "\n",
+        "$p_i$ : unit price of drug (e.g., $p_a = \\$8$)\n",
+        "\n",
+        "$h_i$, : labor hours required for drug type i (e.g., $h_b = 2 hours$)\n",
+        "\n",
+        "$H$: total labor hours availibilty (e.g., $H = 4,000$ hours) \n",
+        "\n",
+        "$R_{ij}$: unit of drug j required to produce a unit of drug i (e.g., $R_{BA} = 2$ ) \n",
+        "\n",
+        "$s_i$: unit of drug i type sold \n",
+        "\n",
+        "\n",
+        "### Decisions Variables:\n",
+        "\n",
+        "$x_i$: unit of drug type $i$  to produce\n",
+        "\n",
+        "### Objective Function: \n",
+        "\n",
+        "\\begin{equation}\n",
+        "\\max_{x_{ij}} \\quad \\sum_{i\\in\\{A,B,C\\}} p_i*s_i\n",
+        "\\tag{0}\n",
+        "\\end{equation}   \n",
+        "\n",
+        "### Constraints:\n",
+        "\n",
+        "\\begin{equation}\n",
+        "\\sum_{i\\in\\{A,B,C\\}} h_i*x_i \\leq H \\quad \\text{(labor hours used cannot exceed available)}\n",
+        "\\tag{1}\n",
+        "\\end{equation}   \n",
+        "\n",
+        "\\begin{equation}\n",
+        "si\\leq x_i - \\sum_{j\\in\\{A,B,C\\}} R_{ij} *x_j ,{i\\in\\{A,B,C\\}} \\quad \\text{(unit sold cannot exceed available)}\n",
+        "\\tag{2}\n",
+        "\\end{equation}   \n",
+        "\n",
+        "\\begin{equation}\n",
+        "s_i \\geq 0, i\\in \\{A,B,C\\} \\quad \\text{(non-negative sales)}\n",
+        "\\tag{3}\n",
+        "\\end{equation} \n",
+        "\n",
+        "\\begin{equation}\n",
+        "x_i \\geq 0, i\\in \\{A,B,C\\} \\quad \\text{(non-negative production)}\n",
+        "\\tag{4}\n",
+        "\\end{equation}   "
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "e8dV9qXMizxF"
+      },
+      "source": [
+        "---\n",
+        "\n",
+        "## Python Implementation"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!python -m pip install gurobipy"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "7tQw_XFBu-Lz",
+        "outputId": "1ace806f-0cb8-4ac9-e121-1246d3daf5fe"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Looking in indexes: https://pypi.org/simple, https://us-python.pkg.dev/colab-wheels/public/simple/\n",
+            "Requirement already satisfied: gurobipy in /usr/local/lib/python3.7/dist-packages (10.0.0)\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "HhPUEbFptu3G"
+      },
+      "outputs": [],
+      "source": [
+        "from gurobipy import *  # import the optimize solver Gurobi\n",
+        "import numpy as np"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "drug_kind = 3"
+      ],
+      "metadata": {
+        "id": "tr3d9AmE3MCn"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "m = Model()"
+      ],
+      "metadata": {
+        "id": "kO8_3X1B18rP"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "#input\n",
+        "p = [8, 70, 100] #selling price\n",
+        "h = [1,2,3] #hour labor\n",
+        "H = 4000 #total hour\n",
+        "R = [[0,0,0],[2,0,0],[0,1,0]] #Unit required\n",
+        "pro = [[1,0,0],[0,1,0],[0,0,1]] #produciton"
+      ],
+      "metadata": {
+        "id": "0jNIEiTut32J"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "production = []\n",
+        "for i in range(drug_kind):\n",
+        "  production.append(m.addVar(vtype=GRB.INTEGER, name='nx{}'.format(i + 1)))\n",
+        "\n",
+        "\n"
+      ],
+      "metadata": {
+        "id": "p7748-Jntz-T"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Set the Maximize Obijective: Total revenue\n",
+        "rev = m.setObjective(quicksum([p[i] * production[i]for i in range(len(production))]),  GRB.MAXIMIZE)"
+      ],
+      "metadata": {
+        "id": "h8ExID7VHG4p"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Set Non Negative decision variable\n",
+        "c1 = []\n",
+        "for i in range(len(production)):\n",
+        "    c1.append(m.addConstr(production[i] >= 0))\n",
+        "    "
+      ],
+      "metadata": {
+        "id": "csnONzlwLOgP"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "c2 = []\n",
+        "for i in range(len(production)):\n",
+        "    c2.append(m.addConstr(quicksum([production[i] * h[i]]) <= H))"
+      ],
+      "metadata": {
+        "id": "C3jtFZeaXBEi"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "#c3 = []\n",
+        "#for i in range(len(production)):\n",
+        "  #c3.append(m.addConstr(quicksum([production[i] *R[i]]) <= production[i]*pro[i]))"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 222
+        },
+        "id": "ftCjBEHKcxBT",
+        "outputId": "e87263f6-3f87-4fda-c612-4faf733a3b06"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "error",
+          "ename": "TypeError",
+          "evalue": "ignored",
+          "traceback": [
+            "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+            "\u001b[0;31mTypeError\u001b[0m                                 Traceback (most recent call last)",
+            "\u001b[0;32m<ipython-input-58-1d972f344b76>\u001b[0m in \u001b[0;36m<module>\u001b[0;34m\u001b[0m\n\u001b[1;32m      1\u001b[0m \u001b[0mc3\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0;34m[\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      2\u001b[0m \u001b[0;32mfor\u001b[0m \u001b[0mi\u001b[0m \u001b[0;32min\u001b[0m \u001b[0mrange\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mlen\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mproduction\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m----> 3\u001b[0;31m   \u001b[0mc3\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mappend\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mm\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0maddConstr\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mquicksum\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0mproduction\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0mi\u001b[0m\u001b[0;34m]\u001b[0m \u001b[0;34m*\u001b[0m\u001b[0mR\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0mi\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m)\u001b[0m \u001b[0;34m<=\u001b[0m \u001b[0mproduction\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0mi\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m*\u001b[0m\u001b[0mpro\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0mi\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m      4\u001b[0m \u001b[0;31m#VECTOR AND SINGLE VALUE MISPLACE\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+            "\u001b[0;31mTypeError\u001b[0m: can't multiply sequence by non-int of type 'Var'"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Run the optimize solver\n",
+        "m.optimize()"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "ZnTdTqWMfVEu",
+        "outputId": "35887b7d-8226-41c1-edb4-f320a853a4b7"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Gurobi Optimizer version 10.0.0 build v10.0.0rc2 (linux64)\n",
+            "\n",
+            "CPU model: AMD EPYC 7B12, instruction set [SSE2|AVX|AVX2]\n",
+            "Thread count: 1 physical cores, 2 logical processors, using up to 2 threads\n",
+            "\n",
+            "Optimize a model with 6 rows, 3 columns and 6 nonzeros\n",
+            "Model fingerprint: 0xd14206b1\n",
+            "Variable types: 0 continuous, 3 integer (0 binary)\n",
+            "Coefficient statistics:\n",
+            "  Matrix range     [1e+00, 3e+00]\n",
+            "  Objective range  [8e+00, 1e+02]\n",
+            "  Bounds range     [0e+00, 0e+00]\n",
+            "  RHS range        [4e+03, 4e+03]\n",
+            "Found heuristic solution: objective 305300.00000\n",
+            "Presolve removed 6 rows and 3 columns\n",
+            "Presolve time: 0.00s\n",
+            "Presolve: All rows and columns removed\n",
+            "\n",
+            "Explored 0 nodes (0 simplex iterations) in 0.02 seconds (0.00 work units)\n",
+            "Thread count was 1 (of 2 available processors)\n",
+            "\n",
+            "Solution count 1: 305300 \n",
+            "\n",
+            "Optimal solution found (tolerance 1.00e-04)\n",
+            "Best objective 3.053000000000e+05, best bound 3.053000000000e+05, gap 0.0000%\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Get the Optimal Solution for X\n",
+        "m.printAttr('X')"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "Lh5-wHoPYCqC",
+        "outputId": "7a7d93e8-f5aa-4897-d33d-07a5d67946ab"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "\n",
+            "    Variable            X \n",
+            "-------------------------\n",
+            "         nx1         4000 \n",
+            "         nx2         2000 \n",
+            "         nx3         1333 \n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Get the Optimal Objective Value\n",
+        "m.ObjVal"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "czB9jUb3ffva",
+        "outputId": "369c0eac-72bd-465c-f26e-c8a9a2bacd58"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "305300.0"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 41
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "print(production)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "bpugv7hiGCsM",
+        "outputId": "91fce41c-7838-4227-93ad-ea1bb2eee7b9"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "[<gurobi.Var nx1 (value 4000.0)>, <gurobi.Var nx2 (value 2000.0)>, <gurobi.Var nx3 (value 1333.0)>]\n"
+          ]
+        }
+      ]
+    }
+  ]
+}
